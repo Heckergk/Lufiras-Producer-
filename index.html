@@ -1,0 +1,1364 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lufiras Producer - iOS 26 Ultra Immersive Studio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Oswald:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Three.js for 3D Simulation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandGold: '#F59E0B', // Sun-gold accent
+                        brandRed: '#EF4444',  // Coral Red
+                        brandGreen: '#10B981',// Emerald Green
+                        darkBg: '#020204',    // OLED Deep Black
+                        glassBg: 'rgba(10, 11, 16, 0.4)', // iOS 26 translucent glass
+                        glassBorder: 'rgba(255, 255, 255, 0.08)'
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        heading: ['Oswald', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* iOS 26 Frosted Mirror Glass */
+        .ios26-glass {
+            background: rgba(10, 11, 16, 0.45);
+            backdrop-filter: blur(32px) saturate(230%);
+            -webkit-backdrop-filter: blur(32px) saturate(230%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .ios26-glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px) saturate(190%);
+            -webkit-backdrop-filter: blur(20px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ios26-glass-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+        }
+
+        /* Ambient Fluid Light Blobs */
+        @keyframes liquidOrbit {
+            0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+            50% { transform: translate(80px, -80px) scale(1.25) rotate(180deg); }
+            100% { transform: translate(0px, 0px) scale(1) rotate(360deg); }
+        }
+
+        .fluid-glow-amber {
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, rgba(245, 158, 11, 0) 70%);
+            animation: liquidOrbit 20s infinite ease-in-out;
+        }
+
+        .fluid-glow-red {
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0) 70%);
+            animation: liquidOrbit 24s infinite ease-in-out reverse;
+        }
+
+        /* Golden shimmer overlay */
+        .btn-ios-shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-ios-shimmer::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+        }
+        .btn-ios-shimmer:hover::before {
+            left: 150%;
+            transition: left 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Haptic Clicks Ripple */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple-span {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripEffect 0.5s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripEffect {
+            to {
+                transform: scale(4.5);
+                opacity: 0;
+            }
+        }
+
+        /* Text background behind laptop styling */
+        .depth-background-text {
+            font-size: clamp(4rem, 15vw, 12rem);
+            line-height: 0.8;
+            letter-spacing: -0.05em;
+            text-fill-color: transparent;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            -webkit-background-clip: text;
+            background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            user-select: none;
+        }
+
+        /* Floating Animation for Assistant */
+        @keyframes floatAvatar {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+        .floating-assistant {
+            animation: floatAvatar 4s infinite ease-in-out;
+        }
+
+        /* Entrance Slide-in for Assistant */
+        @keyframes slideInUp {
+            from { transform: translateY(150%) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .animate-assistant-entry {
+            animation: slideInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Color Grading Real Filter effect */
+        .grade-target {
+            transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-gray-100 font-sans selection:bg-brandGold selection:text-black overflow-x-hidden antialiased">
+
+    <!-- Ambient Floating Gradients -->
+    <div class="fluid-glow-amber fixed top-20 -left-40 w-[800px] h-[800px] rounded-full pointer-events-none z-0"></div>
+    <div class="fluid-glow-red fixed bottom-20 -right-40 w-[700px] h-[700px] rounded-full pointer-events-none z-0"></div>
+
+    <!-- Live Alerts / Toast Container -->
+    <div id="toastContainer" class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- High Fidelity Web Audio Synthesis Engine (For click haptics) -->
+    <script>
+        const playSynthFeedback = (type = 'click') => {
+            try {
+                const actx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = actx.createOscillator();
+                const gain = actx.createGain();
+                
+                osc.connect(gain);
+                gain.connect(actx.destination);
+                
+                if (type === 'click') {
+                    // Tactile mechanical slider tick
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1500, actx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1000, actx.currentTime + 0.02);
+                    gain.gain.setValueAtTime(0.04, actx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.02);
+                    osc.start();
+                    osc.stop(actx.currentTime + 0.03);
+                } else if (type === 'pop') {
+                    // Interface toggle sound
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, actx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, actx.currentTime + 0.06);
+                    gain.gain.setValueAtTime(0.08, actx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.06);
+                    osc.start();
+                    osc.stop(actx.currentTime + 0.07);
+                } else if (type === 'chime') {
+                    // Success chime
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, actx.currentTime); // C5
+                    osc.frequency.setValueAtTime(783.99, actx.currentTime + 0.05); // G5
+                    gain.gain.setValueAtTime(0.06, actx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(actx.currentTime + 0.25);
+                }
+            } catch (err) {}
+        };
+
+        // Click Ripple & Sound Trigger
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.ripple-btn');
+            if (btn) {
+                const sound = btn.getAttribute('data-sound') || 'click';
+                playSynthFeedback(sound);
+
+                const circle = document.createElement('span');
+                const d = Math.max(btn.clientWidth, btn.clientHeight);
+                const rect = btn.getBoundingClientRect();
+                
+                circle.style.width = circle.style.height = d + 'px';
+                circle.style.left = e.clientX - rect.left - d/2 + 'px';
+                circle.style.top = e.clientY - rect.top - d/2 + 'px';
+                circle.classList.add('ripple-span');
+                
+                const existing = btn.querySelector('.ripple-span');
+                if (existing) existing.remove();
+                
+                btn.appendChild(circle);
+            }
+        });
+
+        // Toast notifications
+        function showNotification(title, message, isSuccess = true) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `ios26-glass p-4 rounded-2xl border-l-4 ${isSuccess ? 'border-brandGreen' : 'border-brandGold'} shadow-2xl flex items-center gap-4 transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto max-w-sm`;
+            
+            toast.innerHTML = `
+                <div class="flex-shrink-0">
+                    ${isSuccess ? '<i class="fa-solid fa-circle-check text-brandGreen text-lg"></i>' : '<i class="fa-solid fa-circle-exclamation text-brandGold text-lg"></i>'}
+                </div>
+                <div>
+                    <h5 class="text-xs font-bold uppercase tracking-wider text-white">${title}</h5>
+                    <p class="text-[11px] text-gray-400 mt-0.5 leading-relaxed">${message}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+                playSynthFeedback('chime');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4500);
+        }
+    </script>
+
+    <!-- Header / Navigation Panel -->
+    <header class="sticky top-4 z-50 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="ios26-glass rounded-2xl py-4 px-6 flex items-center justify-between border border-white/10 shadow-2xl">
+            <!-- Brand -->
+            <div class="flex flex-col cursor-pointer" onclick="playSynthFeedback('pop')">
+                <span class="text-[10px] uppercase tracking-[0.3em] text-brandGold font-extrabold leading-none">LUFIRAS PRODUCER</span>
+                <span class="text-lg font-heading font-black tracking-widest text-white leading-none mt-1">PRESENTS</span>
+            </div>
+            
+            <!-- Center Menu Links -->
+            <nav class="hidden md:flex space-x-8 text-[11px] font-bold tracking-[0.2em] uppercase">
+                <a href="#about" onclick="playSynthFeedback('click')" class="text-gray-300 hover:text-brandGold transition-colors">Home</a>
+                <a href="#simulator" onclick="playSynthFeedback('click')" class="text-gray-300 hover:text-brandGold transition-colors">Grading Tool</a>
+                <a href="#services" onclick="playSynthFeedback('click')" class="text-gray-300 hover:text-brandGold transition-colors">Services</a>
+                <a href="#packages" onclick="playSynthFeedback('click')" class="text-gray-300 hover:text-brandGold transition-colors">Packages</a>
+                <a href="#contact" onclick="playSynthFeedback('click')" class="text-gray-300 hover:text-brandGold transition-colors">Contact</a>
+            </nav>
+
+            <!-- CTA header button -->
+            <a href="#contact" data-sound="pop" class="ripple-btn btn-ios-shimmer ios26-glass rounded-xl px-5 py-2.5 text-[10px] uppercase font-extrabold tracking-[0.15em] text-brandGold border border-brandGold/30 hover:border-brandGold/80 transition-all shadow-md">
+                DM NOW <i class="fa-solid fa-paper-plane ml-1"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Hero Section with 3D Laptop, Behind-the-Laptop Text, and Visuals -->
+    <section id="about" class="relative pt-12 pb-24 md:py-36 flex items-center z-10 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative">
+            
+            <!-- GIANT BACKGROUND TEXT (Behind the Laptop & Content Layer) -->
+            <div class="absolute inset-0 flex flex-col justify-center items-center pointer-events-none z-0 select-none overflow-hidden">
+                <div class="depth-background-text font-heading font-extrabold leading-none uppercase">LUFIRAS</div>
+                <div class="depth-background-text font-heading font-extrabold leading-none uppercase -mt-4 opacity-70">CREATIVE</div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center relative z-10">
+                
+                <!-- Hero Left text details -->
+                <div class="lg:col-span-6 space-y-8 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full ios26-glass text-[11px] font-bold tracking-widest text-brandGold border border-white/5">
+                        <span class="w-2 h-2 rounded-full bg-brandGold animate-pulse"></span>
+                        iOS 26 HOLOGRAM ENVIRONMENT
+                    </div>
+                    
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-none text-white font-heading">
+                        CINEMATIC <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-white via-brandGold to-yellow-600 font-black">EDITING STUDIO</span>
+                    </h1>
+
+                    <p class="text-base sm:text-lg text-gray-300 max-w-xl font-light tracking-wide leading-relaxed">
+                        "It’s Not Just Editing, It’s A <span class="text-brandGold font-semibold">Story</span> That Connects." <br>
+                        <span class="text-xs sm:text-sm text-gray-400 font-normal">Turning Your <span class="italic text-white">Vision</span> Into Cinematic Reality.</span>
+                    </p>
+
+                    <div class="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                        <a href="#packages" data-sound="pop" class="ripple-btn btn-ios-shimmer w-full sm:w-auto text-center px-8 py-4 bg-brandGold text-black font-extrabold uppercase tracking-wider rounded-xl transition duration-300 hover:brightness-110 shadow-xl shadow-brandGold/20">
+                            Explore Packages
+                        </a>
+                        <a href="#simulator" data-sound="click" class="ripple-btn w-full sm:w-auto text-center px-8 py-4 ios26-glass text-white font-semibold tracking-wider uppercase rounded-xl transition duration-300 hover:bg-white/10">
+                            Color Simulator <i class="fa-solid fa-sliders ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Hero Right: Procedural 3D Laptop Scene Layer (Three.js) -->
+                <div class="lg:col-span-6 relative flex justify-center items-center min-h-[400px] md:min-h-[480px]">
+                    
+                    <!-- 3D Canvas container -->
+                    <div id="threeLaptopContainer" class="w-full h-[400px] md:h-[480px] relative z-10 cursor-grab active:cursor-grabbing">
+                        <!-- Canvas will mount here -->
+                    </div>
+
+                    <!-- Ambient Glowing base frame below laptop -->
+                    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 w-4/5 h-6 bg-brandGold/20 rounded-full blur-2xl pointer-events-none z-0"></div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- LIVE COLOR GRADING SYSTEM ENGINE -->
+    <section id="simulator" class="py-24 relative z-10 border-t border-white/10 bg-black/40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                <h2 class="text-xs uppercase tracking-[0.3em] text-brandGold font-bold">INTERACTIVE ENGINE</h2>
+                <p class="text-3xl sm:text-4xl font-heading font-black text-white uppercase tracking-wider">COLOR GRADING SIMULATOR</p>
+                <div class="w-16 h-1 bg-brandGold mx-auto rounded-full"></div>
+                <p class="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-xl mx-auto font-light">
+                    Hamein aapke project par complete cinematic color control milta hai. Apne hisab se filters lagakar check karein ki dynamic grading se footage kaise transform hoti hai!
+                </p>
+            </div>
+
+            <!-- Grade Simulator Panel Container -->
+            <div class="ios26-glass rounded-[32px] p-6 md:p-8 border border-white/10 shadow-2xl max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                
+                <!-- Left: Grade Monitor Screen -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="relative aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black">
+                        <!-- Simulated Footage representation -->
+                        <img id="gradeImage" src="https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1000&q=80" alt="Cinematic grading target view" class="grade-target absolute inset-0 w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none"></div>
+
+                        <!-- Badge indicator displaying selected preset -->
+                        <div class="absolute top-4 left-4 bg-black/85 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl text-[9px] uppercase tracking-widest font-mono text-brandGold">
+                            LUT Preset: <span id="presetLabel" class="font-extrabold text-white">Standard Rec.709</span>
+                        </div>
+
+                        <!-- Real-time dynamic overlay colors -->
+                        <div id="filterOverlay" class="absolute inset-0 mix-blend-color opacity-0 pointer-events-none transition-all duration-300"></div>
+                    </div>
+
+                    <!-- Waveform Scope indicators -->
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="ios26-glass-card p-3 rounded-xl border border-white/5">
+                            <span class="text-[9px] text-gray-500 block font-mono uppercase tracking-widest">WAVEFORM Scope</span>
+                            <div class="h-8 flex items-end justify-center gap-1 mt-2">
+                                <span class="w-1.5 bg-brandGold/40 rounded-full transition-all duration-300" id="scopeBar1" style="height: 60%"></span>
+                                <span class="w-1.5 bg-brandGold/70 rounded-full transition-all duration-300" id="scopeBar2" style="height: 85%"></span>
+                                <span class="w-1.5 bg-brandGold/30 rounded-full transition-all duration-300" id="scopeBar3" style="height: 45%"></span>
+                            </div>
+                        </div>
+                        <div class="ios26-glass-card p-3 rounded-xl border border-white/5">
+                            <span class="text-[9px] text-gray-500 block font-mono uppercase tracking-widest">LUT STATUS</span>
+                            <span id="lutStatusText" class="text-xs text-brandGreen font-extrabold block mt-3 uppercase tracking-wider">APPLIED</span>
+                        </div>
+                        <div class="ios26-glass-card p-3 rounded-xl border border-white/5">
+                            <span class="text-[9px] text-gray-500 block font-mono uppercase tracking-widest">DYNAMIC RANGE</span>
+                            <span class="text-xs text-white font-extrabold block mt-3 uppercase font-mono">HDR-10 bit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: grading controls panel dashboard -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div>
+                        <h4 class="text-xs font-black uppercase text-brandGold tracking-widest mb-2 font-mono">Control Dashboard</h4>
+                        <h3 class="text-xl font-heading font-extrabold text-white uppercase tracking-wide">GRADE CHANNELS</h3>
+                        <div class="w-12 h-1 bg-brandGold mt-2 rounded-full"></div>
+                    </div>
+
+                    <!-- Filter Preset Buttons list (Interactive clicks) -->
+                    <div class="space-y-3">
+                        <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-mono">LUT Presets</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="applyGradingPreset('teal-orange')" class="ripple-btn px-4 py-2.5 rounded-xl border border-white/10 text-[10px] uppercase font-bold text-gray-300 hover:text-white hover:bg-white/5 hover:border-brandGold transition-all">
+                                Teal & Orange
+                            </button>
+                            <button onclick="applyGradingPreset('vintage-warm')" class="ripple-btn px-4 py-2.5 rounded-xl border border-white/10 text-[10px] uppercase font-bold text-gray-300 hover:text-white hover:bg-white/5 hover:border-brandGold transition-all">
+                                Vintage Sunset
+                            </button>
+                            <button onclick="applyGradingPreset('cyber-neon')" class="ripple-btn px-4 py-2.5 rounded-xl border border-white/10 text-[10px] uppercase font-bold text-gray-300 hover:text-white hover:bg-white/5 hover:border-brandGold transition-all">
+                                Cyberpunk Neon
+                            </button>
+                            <button onclick="applyGradingPreset('flat-log')" class="ripple-btn px-4 py-2.5 rounded-xl border border-white/10 text-[10px] uppercase font-bold text-gray-300 hover:text-white hover:bg-white/5 hover:border-brandGold transition-all">
+                                Raw LOG Flat
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Fine-tuning Sliders -->
+                    <div class="space-y-4 pt-4 border-t border-white/5">
+                        <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block font-mono">Fine Adjustments</span>
+                        
+                        <!-- Slider Exposure -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-gray-300">EXPOSURE</span>
+                                <span id="expVal" class="font-mono text-brandGold">+0.0 EV</span>
+                            </div>
+                            <input type="range" id="expSlider" min="-50" max="50" value="0" oninput="updateFineGrading()" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-brandGold">
+                        </div>
+
+                        <!-- Slider Saturation -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-gray-300">SATURATION</span>
+                                <span id="satVal" class="font-mono text-brandGold">100%</span>
+                            </div>
+                            <input type="range" id="satSlider" min="0" max="200" value="100" oninput="updateFineGrading()" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-brandGold">
+                        </div>
+
+                        <!-- Slider Contrast -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-gray-300">CONTRAST</span>
+                                <span id="conVal" class="font-mono text-brandGold">100%</span>
+                            </div>
+                            <input type="range" id="conSlider" min="50" max="150" value="100" oninput="updateFineGrading()" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-brandGold">
+                        </div>
+                    </div>
+
+                    <!-- Reset button -->
+                    <button onclick="resetGradingControls()" class="ripple-btn w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-[10px] font-extrabold uppercase tracking-widest text-white rounded-xl transition-all">
+                        Reset Grading Rec.709
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Services / Capabilities Row -->
+    <section id="services" class="py-24 relative z-10 border-t border-white/5 bg-black/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                <h2 class="text-xs uppercase tracking-[0.3em] text-brandGold font-bold">OUR WORKFLOW</h2>
+                <p class="text-3xl sm:text-4xl font-heading font-black text-white uppercase tracking-wider">FLAWLESS TIMELINE CAPABILITIES</p>
+                <div class="w-16 h-1 bg-brandGold mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                
+                <!-- Service 1 -->
+                <div class="ios26-glass-card p-6 rounded-2xl flex flex-col items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-brandGold/10 flex items-center justify-center mb-6 border border-brandGold/20">
+                        <i class="fa-solid fa-palette text-brandGold text-lg"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-white mb-2 uppercase tracking-widest">Color Grading</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed font-light">Custom tone grading tailored for deep cinematic emotion.</p>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="ios26-glass-card p-6 rounded-2xl flex flex-col items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-brandGold/10 flex items-center justify-center mb-6 border border-brandGold/20">
+                        <i class="fa-solid fa-sliders text-brandGold text-lg"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-white mb-2 uppercase tracking-widest">HSL Adjustment</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed font-light">Targeted chroma balancing to preserve flawless consistency.</p>
+                </div>
+
+                <!-- Service 3 -->
+                <div class="ios26-glass-card p-6 rounded-2xl flex flex-col items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-brandGold/10 flex items-center justify-center mb-6 border border-brandGold/20">
+                        <i class="fa-solid fa-layer-group text-brandGold text-lg"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-white mb-2 uppercase tracking-widest">LUTs Processing</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed font-light">High-end production lookup tables for standard results.</p>
+                </div>
+
+                <!-- Service 4 -->
+                <div class="ios26-glass-card p-6 rounded-2xl flex flex-col items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-brandGold/10 flex items-center justify-center mb-6 border border-brandGold/20">
+                        <i class="fa-solid fa-wave-square text-brandGold text-lg"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-white mb-2 uppercase tracking-widest">LOG/ProRes</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed font-light">Wide-gamut file handling preserving original digital detail.</p>
+                </div>
+
+                <!-- Service 5 -->
+                <div class="ios26-glass-card p-6 rounded-2xl flex flex-col items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-brandGold/10 flex items-center justify-center mb-6 border border-brandGold/20">
+                        <i class="fa-solid fa-photo-film text-brandGold text-lg"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-white mb-2 uppercase tracking-widest">Pro Cuts</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed font-light">Slick rhythm cuts, pacing control, and high retention pacing.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Packages Section -->
+    <section id="packages" class="py-24 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                <h2 class="text-xs uppercase tracking-[0.3em] text-brandGold font-bold">PRICING PLANS</h2>
+                <p class="text-3xl sm:text-4xl font-heading font-black text-white uppercase tracking-wider">CHOOSE YOUR EDITING SUITE</p>
+                <div class="w-16 h-1 bg-brandGold mx-auto rounded-full"></div>
+            </div>
+
+            <!-- Standard Packages -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-5xl mx-auto items-stretch mb-16">
+                
+                <!-- Package 1: ALBUM SONG -->
+                <div class="relative ios26-glass rounded-[32px] overflow-hidden flex flex-col justify-between p-8 md:p-10 transition-all duration-300 hover:scale-[1.01]">
+                    <div class="absolute top-0 right-0 bg-brandRed text-black text-[10px] font-extrabold tracking-widest uppercase px-5 py-2.5 rounded-bl-2xl">
+                        POPULAR
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="w-10 h-10 rounded-xl bg-brandRed/10 border border-brandRed/20 flex items-center justify-center">
+                                <i class="fa-solid fa-music text-brandRed"></i>
+                            </span>
+                            <span class="text-[10px] uppercase font-bold tracking-widest text-brandRed">STANDALONE MUSIC</span>
+                        </div>
+
+                        <h3 class="text-3xl font-black text-white font-heading tracking-wide uppercase">ALBUM SONG</h3>
+                        <p class="text-gray-400 text-xs mt-1 font-light">Custom tailormade editing for standalone music videos, covers & indie singles.</p>
+                        
+                        <!-- Price block -->
+                        <div class="my-8 border-y border-white/5 py-5 flex items-baseline gap-2">
+                            <span class="text-4xl sm:text-5xl font-black font-heading text-brandRed">₹1499</span>
+                            <span class="text-xs uppercase text-gray-400 tracking-wider font-semibold">Only / Package</span>
+                        </div>
+
+                        <!-- Feature list -->
+                        <ul class="space-y-4 text-xs font-light text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-circle-check text-brandRed mt-0.5 text-sm"></i>
+                                <div>
+                                    <span class="font-bold text-white">Professional Video Editing</span>
+                                    <p class="text-[11px] text-gray-400 mt-0.5">High precision rhythm matching and sequencing.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-circle-check text-brandRed mt-0.5 text-sm"></i>
+                                <div>
+                                    <span class="font-bold text-white">Cinematic Color Grading</span>
+                                    <p class="text-[11px] text-gray-400 mt-0.5">Rich skin tones and immersive color aesthetics.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-circle-check text-brandRed mt-0.5 text-sm"></i>
+                                <div>
+                                    <span class="font-bold text-white">HSL Adjustments</span>
+                                    <p class="text-[11px] text-gray-400 mt-0.5">Individual color channels tuning.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-8">
+                        <a href="#contact" data-sound="pop" onclick="selectPackage('Album Song Editing (₹1499)')" class="ripple-btn btn-ios-shimmer w-full block text-center py-4 bg-brandRed text-white font-bold uppercase tracking-wider rounded-xl transition hover:brightness-110">
+                            Book Package
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Package 2: PREMIUM PROMOTION -->
+                <div class="relative ios26-glass rounded-[32px] overflow-hidden flex flex-col justify-between p-8 md:p-10 transition-all duration-300 hover:scale-[1.01]">
+                    <div class="absolute top-0 right-0 bg-brandGreen text-black text-[10px] font-extrabold tracking-widest uppercase px-5 py-2.5 rounded-bl-2xl">
+                        BEST VALUE
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="w-10 h-10 rounded-xl bg-brandGreen/10 border border-brandGreen/20 flex items-center justify-center">
+                                <i class="fa-solid fa-crown text-brandGreen"></i>
+                            </span>
+                            <span class="text-[10px] uppercase font-bold tracking-widest text-brandGreen">FULL PROMO BUNDLE</span>
+                        </div>
+
+                        <h3 class="text-3xl font-black text-white font-heading tracking-wide uppercase">PREMIUM PROMOTION</h3>
+                        <p class="text-gray-400 text-xs mt-1 font-light">Complete visual suite optimized for high retention reach & streaming channels.</p>
+                        
+                        <!-- Price block -->
+                        <div class="my-8 border-y border-white/5 py-5 flex items-baseline gap-2">
+                            <span class="text-4xl sm:text-5xl font-black font-heading text-brandGreen">₹1999</span>
+                            <span class="text-xs uppercase text-gray-400 tracking-wider font-semibold">Only / Bundle</span>
+                        </div>
+
+                        <!-- Feature details list -->
+                        <ul class="space-y-4 text-xs font-light text-gray-300">
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-circle-check text-brandGreen mt-0.5 text-sm"></i>
+                                <div>
+                                    <span class="font-bold text-white">Full Album Song Editing</span>
+                                    <p class="text-[11px] text-gray-400 mt-0.5">Complete storytelling sequencing & precision edit drafts.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-circle-check text-brandGreen mt-0.5 text-sm"></i>
+                                <div>
+                                    <span class="font-bold text-white">Eye-Catching YouTube Thumbnail</span>
+                                    <p class="text-[11px] text-gray-400 mt-0.5">High-contrast, click-worthy custom designed visual asset.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <i class="fa-solid fa-circle-check text-brandGreen mt-0.5 text-sm"></i>
+                                <div>
+                                    <span class="font-bold text-white">Cinematic Trailer / Teaser</span>
+                                    <p class="text-[11px] text-gray-400 mt-0.5">Up to 30s premium teaser optimized for Shorts/Reels.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-8">
+                        <a href="#contact" data-sound="pop" onclick="selectPackage('Premium Promotion Bundle (₹1999)')" class="ripple-btn btn-ios-shimmer w-full block text-center py-4 bg-brandGreen text-white font-bold uppercase tracking-wider rounded-xl transition hover:brightness-110">
+                            Book Premium Bundle
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- INTERACTIVE PRICE CONFIGURATOR -->
+            <div class="ios26-glass rounded-[32px] p-8 md:p-10 border border-white/10 max-w-4xl mx-auto shadow-2xl relative overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    
+                    <!-- Configurator switches -->
+                    <div class="md:col-span-7 space-y-6">
+                        <div>
+                            <span class="text-[10px] text-brandGold font-mono uppercase tracking-widest font-bold">iOS Configurator Engine</span>
+                            <h4 class="text-2xl font-heading font-black text-white uppercase tracking-wide">BUILD YOUR PLAN</h4>
+                            <p class="text-xs text-gray-400 font-light mt-1">Apne requirement ke inputs checkmark karein aur dynamic live price generate karein.</p>
+                        </div>
+
+                        <!-- Checkboxes / Options list -->
+                        <div class="space-y-4">
+                            <!-- Custom Addon 1 -->
+                            <label class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/15 cursor-pointer transition-all" onclick="calculatePlanPrice()">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="optAlbum" checked class="w-4 h-4 accent-brandGold rounded cursor-pointer">
+                                    <div class="text-left">
+                                        <span class="text-xs font-bold text-white block">Base Album Song Edit</span>
+                                        <span class="text-[10px] text-gray-400 font-light">Timeline cuts, sequence styling.</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-brandGold">₹1499</span>
+                            </label>
+
+                            <!-- Custom Addon 2 -->
+                            <label class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/15 cursor-pointer transition-all" onclick="calculatePlanPrice()">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="optThumbnail" class="w-4 h-4 accent-brandGold rounded cursor-pointer">
+                                    <div class="text-left">
+                                        <span class="text-xs font-bold text-white block">YouTube Custom Thumbnail</span>
+                                        <span class="text-[10px] text-gray-400 font-light">High click-through optimized graphic layout.</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-brandGold">+₹250</span>
+                            </label>
+
+                            <!-- Custom Addon 3 -->
+                            <label class="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/15 cursor-pointer transition-all" onclick="calculatePlanPrice()">
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="optTeaser" class="w-4 h-4 accent-brandGold rounded cursor-pointer">
+                                    <div class="text-left">
+                                        <span class="text-xs font-bold text-white block">Cinematic Trailer / Teaser</span>
+                                        <span class="text-[10px] text-gray-400 font-light">Up to 30 second teaser cut for Reels/Shorts.</span>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-bold text-brandGold">+₹250</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Checkout Summary visual -->
+                    <div class="md:col-span-5 bg-white/5 rounded-3xl p-6 border border-white/10 text-center space-y-6">
+                        <span class="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em] block">ESTIMATED COST</span>
+                        
+                        <div>
+                            <span class="text-5xl font-heading font-black text-brandGold" id="dynamicCalcPrice">₹1499</span>
+                            <span class="text-xs text-gray-400 block mt-2 font-mono uppercase tracking-widest">Calculated Price</span>
+                        </div>
+
+                        <div class="border-t border-white/10 pt-4 text-xs font-light text-gray-400">
+                            Included: <span id="summaryAddonsText" class="text-white font-bold">Base Album Edit</span>
+                        </div>
+
+                        <button onclick="bookCustomPlan()" data-sound="chime" class="ripple-btn w-full py-4 bg-brandGold hover:bg-white text-black font-extrabold uppercase tracking-widest rounded-xl transition duration-300 shadow-xl shadow-brandGold/15">
+                            Book Custom Suite <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Interactive Contact Enquiry Section -->
+    <section id="contact" class="py-24 bg-black/50 border-t border-white/10 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                
+                <!-- Contact info panel links -->
+                <div class="lg:col-span-5 space-y-8">
+                    <div>
+                        <h2 class="text-xs uppercase tracking-[0.3em] text-brandGold font-bold">CONTACT DIRECTORY</h2>
+                        <h3 class="text-3xl font-heading font-bold text-white uppercase tracking-wider">LET'S COMMENCE CREATING</h3>
+                        <div class="w-16 h-1 bg-brandGold mt-4 rounded-full"></div>
+                    </div>
+
+                    <p class="text-gray-400 text-xs sm:text-sm leading-relaxed font-light">
+                        Aapke paas raw footage taiyaar hai ya koi creative idea hai? Hamein direct DM karein ya neeche diye gaye numbers par contact karke apni deals final karein!
+                    </p>
+
+                    <!-- Contact details -->
+                    <div class="space-y-4">
+                        <a href="tel:+919411636593" data-sound="click" class="ripple-btn flex items-center gap-4 p-4 rounded-2xl ios26-glass-card">
+                            <span class="w-10 h-10 rounded-xl bg-brandGold/10 flex items-center justify-center text-brandGold text-lg border border-brandGold/20">
+                                <i class="fa-solid fa-phone"></i>
+                            </span>
+                            <div>
+                                <span class="text-[9px] uppercase text-gray-500 block tracking-wider font-bold">Primary line</span>
+                                <span class="text-sm font-bold text-white tracking-wide">+91 9411636593</span>
+                            </div>
+                        </a>
+
+                        <a href="tel:+917303044689" data-sound="click" class="ripple-btn flex items-center gap-4 p-4 rounded-2xl ios26-glass-card">
+                            <span class="w-10 h-10 rounded-xl bg-brandGold/10 flex items-center justify-center text-brandGold text-lg border border-brandGold/20">
+                                <i class="fa-solid fa-phone-volume"></i>
+                            </span>
+                            <div>
+                                <span class="text-[9px] uppercase text-gray-500 block tracking-wider font-bold">Alternative Call / WhatsApp</span>
+                                <span class="text-sm font-bold text-white tracking-wide">+91 7303044689</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Registration Enquiry Form -->
+                <div class="lg:col-span-7 ios26-glass p-8 md:p-10 rounded-[32px] border border-white/10 relative">
+                    <h4 class="text-xl font-bold font-heading text-white tracking-wider uppercase mb-6">Quick Enquiry Form</h4>
+                    
+                    <form id="enquiryForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-wider text-gray-400 mb-2 font-bold">Your Name</label>
+                                <input type="text" required id="senderName" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white text-xs focus:outline-none focus:border-brandGold focus:bg-black/85 transition-all" placeholder="Enter your name">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-wider text-gray-400 mb-2 font-bold">Phone Number</label>
+                                <input type="tel" required id="senderPhone" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white text-xs focus:outline-none focus:border-brandGold focus:bg-black/85 transition-all" placeholder="Your contact number">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-wider text-gray-400 mb-2 font-bold">Selected Suite Pack</label>
+                            <input type="text" readonly id="selectedPackage" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-brandGold text-xs font-bold focus:outline-none" value="General Video Editing Inquiry">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-wider text-gray-400 mb-2 font-bold">Project details</label>
+                            <textarea id="projectMessage" rows="4" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white text-xs focus:outline-none focus:border-brandGold focus:bg-black/85 transition-all resize-none" placeholder="Briefly describe your project requirements..."></textarea>
+                        </div>
+
+                        <button type="submit" data-sound="chime" class="ripple-btn w-full py-4 bg-brandGold text-black font-extrabold uppercase tracking-widest rounded-xl hover:bg-white transition-all duration-300 shadow-xl shadow-brandGold/20">
+                            SUBMIT ENQUIRY <i class="fa-solid fa-paper-plane ml-2"></i>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FLOATING BOY ASSISTANT CHARACTER (Hologram Greeting on load) -->
+    <div id="boyAssistant" class="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none translate-y-[150%] opacity-0 max-w-xs sm:max-w-sm">
+        
+        <!-- Speech Bubble (Typewriter Text) -->
+        <div id="speechBubble" class="ios26-glass p-4 rounded-2xl border border-white/15 text-xs text-gray-200 leading-relaxed max-w-xs shadow-2xl relative pointer-events-auto transition-all duration-300 transform scale-95 opacity-0">
+            <!-- Tip -->
+            <div class="absolute bottom-[-6px] right-8 w-3 h-3 bg-[#0d0f14] rotate-45 border-r border-b border-white/10"></div>
+            
+            <p id="assistantText" class="font-medium text-white"></p>
+            
+            <!-- Quick Assist Buttons -->
+            <div class="mt-3 pt-2 border-t border-white/5 flex justify-end gap-2">
+                <button onclick="dismissAssistant()" class="px-2 py-1 text-[9px] uppercase tracking-wider text-gray-500 hover:text-white font-bold transition">Close</button>
+                <button onclick="triggerAssistantAction()" class="px-2.5 py-1 text-[9px] uppercase tracking-wider bg-brandGold text-black rounded font-black transition hover:scale-105">Let's Edit!</button>
+            </div>
+        </div>
+
+        <!-- Boy Character Avatar (Fully custom SVG with headphone layers & breathe keyframes) -->
+        <div class="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-tr from-brandGold/20 via-[#0d0e15] to-brandGold/5 rounded-full p-[1px] border border-white/15 shadow-2xl pointer-events-auto cursor-pointer floating-assistant" onclick="talkAssistant()">
+            <div class="w-full h-full rounded-full bg-[#05060a] flex items-center justify-center overflow-hidden relative">
+                <!-- SVG Boy Editor -->
+                <svg viewBox="0 0 100 100" class="w-4/5 h-4/5">
+                    <!-- Face Base -->
+                    <circle cx="50" cy="53" r="23" fill="#fcd34d" opacity="0.9"/>
+                    <!-- Cool Hair Layout (Geometric/Futuristic Style) -->
+                    <path d="M26 42 C 26 26, 74 26, 74 42 C 74 26, 50 18, 26 42 Z" fill="#1e1b4b"/>
+                    <path d="M30 40 L 40 48 L 50 40 L 60 48 L 70 40 L 50 30 Z" fill="#111827"/>
+                    <!-- Futuristic Glass/Visor (Neon Blue) -->
+                    <rect x="33" y="44" width="34" height="8" rx="4" fill="#06b6d4" opacity="0.9"/>
+                    <rect x="37" y="46" width="26" height="4" rx="2" fill="#fff" opacity="0.4"/>
+                    <!-- Mouth (Smile) -->
+                    <path d="M44 64 Q 50 69 56 64" stroke="#111827" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                    <!-- Neon Studio Headphones -->
+                    <path d="M22 55 A 28 28 0 0 1 78 55" stroke="#f59e0b" stroke-width="5" fill="none"/>
+                    <rect x="18" y="48" width="10" height="16" rx="5" fill="#f59e0b"/>
+                    <rect x="72" y="48" width="10" height="16" rx="5" fill="#f59e0b"/>
+                    <circle cx="23" cy="56" r="3" fill="#fff" opacity="0.7"/>
+                    <circle cx="77" cy="56" r="3" fill="#fff" opacity="0.7"/>
+                </svg>
+                <!-- Online Badge Status -->
+                <span class="absolute bottom-1 right-2 w-3.5 h-3.5 rounded-full bg-brandGreen border-2 border-[#05060a] animate-pulse"></span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black/90 py-12 border-t border-white/10 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <span class="text-xs uppercase tracking-[0.3em] text-brandGold font-bold block">LUFIRAS PRODUCER</span>
+                <span class="text-xs text-gray-500 mt-1 block font-light">© 2026 Lufiras Producer. All rights reserved.</span>
+            </div>
+            
+            <div class="flex space-x-6 text-lg">
+                <a href="#" class="text-gray-400 hover:text-brandGold transition"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" class="text-gray-400 hover:text-brandGold transition"><i class="fa-brands fa-youtube"></i></a>
+                <a href="#" class="text-gray-400 hover:text-brandGold transition"><i class="fa-brands fa-square-x-twitter"></i></a>
+                <a href="#" class="text-gray-400 hover:text-brandGold transition"><i class="fa-brands fa-whatsapp"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ThreeJS 3D Rotating Laptop Script + Client Logic -->
+    <script>
+        let scene, camera, renderer, laptopGroup;
+        let screenTextureCanvas, screenTextureContext, screenTexture;
+
+        function init3DLaptopScene() {
+            const container = document.getElementById('threeLaptopContainer');
+            if (!container) return;
+
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            // Scene setup
+            scene = new THREE.Scene();
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+            camera.position.set(0, 0, 7.5);
+
+            // WebGL Renderer with alpha channel for transparency
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Lighting setup
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+
+            const pointLightGold = new THREE.PointLight(0xf59e0b, 2.5, 12);
+            pointLightGold.position.set(-3, 1, 3);
+            scene.add(pointLightGold);
+
+            // Setup Screen Texture via HTML5 Canvas (Dynamic Timeline look)
+            screenTextureCanvas = document.createElement('canvas');
+            screenTextureCanvas.width = 512;
+            screenTextureCanvas.height = 320;
+            screenTextureContext = screenTextureCanvas.getContext('2d');
+            
+            // Draw baseline static screen texture
+            drawScreenTimelineContent();
+            
+            screenTexture = new THREE.CanvasTexture(screenTextureCanvas);
+
+            // Constructing 3D Laptop procedural geometry components
+            laptopGroup = new THREE.Group();
+
+            // Material formulations
+            const bodyMaterial = new THREE.MeshStandardMaterial({
+                color: 0x181822,
+                roughness: 0.15,
+                metalness: 0.8
+            });
+            const keyMaterial = new THREE.MeshStandardMaterial({
+                color: 0x0a0a0f,
+                roughness: 0.5
+            });
+            const screenMaterial = new THREE.MeshBasicMaterial({
+                map: screenTexture
+            });
+
+            // Bottom base unit (Chassis)
+            const baseGeo = new THREE.BoxGeometry(3.6, 0.12, 2.4);
+            const baseChassis = new THREE.Mesh(baseGeo, bodyMaterial);
+            baseChassis.position.y = -0.6;
+            laptopGroup.add(baseChassis);
+
+            // Trackpad highlight
+            const padGeo = new THREE.PlaneGeometry(0.8, 0.5);
+            const padMaterial = new THREE.MeshStandardMaterial({ color: 0x101015, roughness: 0.3 });
+            const pad = new THREE.Mesh(padGeo, padMaterial);
+            pad.rotation.x = -Math.PI / 2;
+            pad.position.set(0, -0.53, 0.8);
+            laptopGroup.add(pad);
+
+            // Keyboard grid mock
+            const keyGridGeo = new THREE.PlaneGeometry(3.0, 1.2);
+            const keyGrid = new THREE.Mesh(keyGridGeo, keyMaterial);
+            keyGrid.rotation.x = -Math.PI / 2;
+            keyGrid.position.set(0, -0.53, -0.2);
+            laptopGroup.add(keyGrid);
+
+            // Hinged Screen Group
+            const screenAssembly = new THREE.Group();
+            screenAssembly.position.set(0, -0.53, -1.1); // pivot point at bottom hinge
+
+            // Screen frame lid
+            const lidGeo = new THREE.BoxGeometry(3.6, 2.4, 0.08);
+            const lid = new THREE.Mesh(lidGeo, bodyMaterial);
+            lid.position.y = 1.15;
+            lid.position.z = -0.04;
+            screenAssembly.add(lid);
+
+            // Actual Screen Display plane
+            const displayGeo = new THREE.PlaneGeometry(3.4, 2.2);
+            const displayMesh = new THREE.Mesh(displayGeo, screenMaterial);
+            displayMesh.position.y = 1.15;
+            displayMesh.position.z = 0.01;
+            screenAssembly.add(displayMesh);
+
+            // Rotate screen open slightly (around 110 degrees)
+            screenAssembly.rotation.x = 0.25; 
+
+            laptopGroup.add(screenAssembly);
+
+            // Rotate starting tilt on Laptop Group
+            laptopGroup.rotation.x = 0.25;
+            laptopGroup.rotation.y = -0.4;
+
+            scene.add(laptopGroup);
+
+            // Register Resize Listener
+            window.addEventListener('resize', onWindowResize);
+
+            // Handle touch drag rotations smoothly
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+
+            container.addEventListener('mousedown', (e) => { isDragging = true; });
+            container.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                previousMousePosition = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+            }, { passive: true });
+
+            window.addEventListener('mouseup', () => { isDragging = false; });
+            window.addEventListener('touchend', () => { isDragging = false; });
+
+            window.addEventListener('mousemove', (e) => {
+                const deltaMove = {
+                    x: e.clientX - previousMousePosition.x,
+                    y: e.clientY - previousMousePosition.y
+                };
+
+                if (isDragging) {
+                    laptopGroup.rotation.y += deltaMove.x * 0.01;
+                    laptopGroup.rotation.x += deltaMove.y * 0.01;
+                }
+
+                previousMousePosition = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                const deltaMove = {
+                    x: e.touches[0].clientX - previousMousePosition.x,
+                    y: e.touches[0].clientY - previousMousePosition.y
+                };
+
+                laptopGroup.rotation.y += deltaMove.x * 0.01;
+                laptopGroup.rotation.x += deltaMove.y * 0.01;
+
+                previousMousePosition = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+            }, { passive: true });
+
+            // Trigger Animation Render Loop
+            animate3D();
+        }
+
+        function drawScreenTimelineContent() {
+            const ctx = screenTextureContext;
+            const w = screenTextureCanvas.width;
+            const h = screenTextureCanvas.height;
+
+            // Fill dark editor workspace background
+            ctx.fillStyle = '#0f111a';
+            ctx.fillRect(0, 0, w, h);
+
+            // Top Header Bar
+            ctx.fillStyle = '#1e2235';
+            ctx.fillRect(0, 0, w, 40);
+            
+            // Header Mock Buttons
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(20, 20, 5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(35, 20, 5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#34d399'; ctx.beginPath(); ctx.arc(50, 20, 5, 0, Math.PI*2); ctx.fill();
+
+            // Track Labels text
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText("LUFIRAS PREMIUM STUDIO RENDER", 80, 24);
+
+            // Center Preview Window Mock
+            ctx.fillStyle = '#020204';
+            ctx.fillRect(20, 60, 472, 160);
+            
+            // Grid background on preview
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for(let i = 20; i < 492; i += 40) {
+                ctx.beginPath(); ctx.moveTo(i, 60); ctx.lineTo(i, 220); ctx.stroke();
+            }
+
+            // Simple glowing geometric graphics in video monitor represent edit element
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+            ctx.fillRect(160, 90, 200, 100);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(160, 90, 200, 100);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px sans-serif';
+            ctx.fillText("Preview: active_grading.mov", 175, 145);
+
+            // Bottom Timeline Tracks Track Block
+            ctx.fillStyle = '#161925';
+            ctx.fillRect(20, 235, 472, 65);
+
+            // Draw individual colored audio/video edit bars
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+            ctx.fillRect(40, 242, 180, 15);
+            ctx.fillStyle = 'rgba(16, 185, 129, 0.5)';
+            ctx.fillRect(230, 242, 210, 15);
+
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.6)';
+            ctx.fillRect(60, 265, 340, 12);
+
+            // Moving playhead needle representation
+            const t = Date.now() * 0.0015;
+            const playheadX = 20 + ((t * 40) % 450);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(playheadX, 235);
+            ctx.lineTo(playheadX, 300);
+            ctx.stroke();
+        }
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+
+            // Continuous slow base rotation animation on Laptop Group
+            if (laptopGroup) {
+                laptopGroup.rotation.y += 0.003;
+                // Soft bobbing wave effect on screen lid
+                laptopGroup.position.y = Math.sin(Date.now() * 0.001) * 0.15;
+            }
+
+            // Redraw screen timeline monitor content continuously for live playhead moving effect!
+            drawScreenTimelineContent();
+            if (screenTexture) screenTexture.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('threeLaptopContainer');
+            if (!container) return;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+        // BOY ASSISTANT CHAT LOGIC
+        const welcomeTexts = [
+            "Hey there! Mai hoon aapka Lufiras Assistant. Aapki videos ko next-level professional banana mera mission hai!",
+            "Mujhe touch karke aap instant recommendations le sakte hain. Standard edits ya fully cinematic package?",
+            "Aap interactive Color Simulator bhi try kar sakte hain ya custom plan build kar sakte hain. Let's make it hit!"
+        ];
+        let currentTextIndex = 0;
+
+        function checkAssistantStatusOnLoad() {
+            setTimeout(() => {
+                const widget = document.getElementById('boyAssistant');
+                if (widget) {
+                    widget.classList.remove('translate-y-[150%]', 'opacity-0');
+                    widget.classList.add('animate-assistant-entry');
+                    
+                    // Show bubble after a short delay
+                    setTimeout(() => {
+                        talkAssistant();
+                    }, 1500);
+                }
+            }, 3000);
+        }
+
+        function talkAssistant() {
+            const bubble = document.getElementById('speechBubble');
+            const txtElement = document.getElementById('assistantText');
+            if (!bubble || !txtElement) return;
+
+            // Pop sound
+            playSynthFeedback('pop');
+
+            bubble.classList.remove('opacity-0', 'scale-95');
+            bubble.classList.add('opacity-100', 'scale-100');
+
+            // Typewriter effect
+            const textToType = welcomeTexts[currentTextIndex];
+            txtElement.innerHTML = "";
+            let charIndex = 0;
+            
+            function typeChar() {
+                if (charIndex < textToType.length) {
+                    txtElement.innerHTML += textToType.charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeChar, 25);
+                }
+            }
+            typeChar();
+
+            // Rotate text options for future clicks
+            currentTextIndex = (currentTextIndex + 1) % welcomeTexts.length;
+        }
+
+        function dismissAssistant() {
+            const bubble = document.getElementById('speechBubble');
+            if (bubble) {
+                bubble.classList.add('opacity-0', 'scale-95');
+                bubble.classList.remove('opacity-100', 'scale-100');
+                playSynthFeedback('click');
+            }
+        }
+
+        function triggerAssistantAction() {
+            dismissAssistant();
+            showNotification("Assistant Recommendation Activated", "Redirecting you directly to the custom suite pricing builder!", true);
+            document.getElementById('packages').scrollIntoView({ behavior: 'smooth' });
+        }
+
+
+        // LIVE GRADING LOGIC ENGINE
+        const currentGradingState = {
+            lut: 'standard',
+            exposure: 0,
+            saturation: 100,
+            contrast: 100
+        };
+
+        function updateFineGrading() {
+            const expVal = parseInt(document.getElementById('expSlider').value);
+            const satVal = parseInt(document.getElementById('satSlider').value);
+            const conVal = parseInt(document.getElementById('conSlider').value);
+
+            currentGradingState.exposure = expVal;
+            currentGradingState.saturation = satVal;
+            currentGradingState.contrast = conVal;
+
+            document.getElementById('expVal').innerText = (expVal >= 0 ? '+' : '') + (expVal / 10).toFixed(1) + ' EV';
+            document.getElementById('satVal').innerText = satVal + '%';
+            document.getElementById('conVal').innerText = conVal + '%';
+
+            applyCombinedFilters();
+            
+            // scope bars animation on update
+            const b1 = document.getElementById('scopeBar1');
+            const b2 = document.getElementById('scopeBar2');
+            const b3 = document.getElementById('scopeBar3');
+            if(b1 && b2 && b3) {
+                b1.style.height = `${Math.floor(Math.random() * 50) + 30}%`;
+                b2.style.height = `${Math.floor(Math.random() * 40) + 50}%`;
+                b3.style.height = `${Math.floor(Math.random() * 50) + 20}%`;
+            }
+
+            playSynthFeedback('click');
+        }
+
+        function applyGradingPreset(presetName) {
+            currentGradingState.lut = presetName;
+            const targetLabel = document.getElementById('presetLabel');
+            const overlay = document.getElementById('filterOverlay');
+            
+            overlay.className = "absolute inset-0 mix-blend-color transition-all duration-300 pointer-events-none";
+
+            if (presetName === 'teal-orange') {
+                targetLabel.innerText = "Teal & Orange";
+                overlay.style.backgroundColor = 'rgba(20, 184, 166, 0.35)';
+                overlay.style.opacity = '1';
+                document.getElementById('expSlider').value = 10;
+                document.getElementById('satSlider').value = 135;
+                document.getElementById('conSlider').value = 120;
+            } else if (presetName === 'vintage-warm') {
+                targetLabel.innerText = "Vintage Sunset";
+                overlay.style.backgroundColor = 'rgba(245, 158, 11, 0.3)';
+                overlay.style.opacity = '1';
+                document.getElementById('expSlider').value = -5;
+                document.getElementById('satSlider').value = 110;
+                document.getElementById('conSlider').value = 95;
+            } else if (presetName === 'cyber-neon') {
+                targetLabel.innerText = "Cyberpunk Neon";
+                overlay.style.backgroundColor = 'rgba(236, 72, 153, 0.4)';
+                overlay.style.opacity = '1';
+                document.getElementById('expSlider').value = 15;
+                document.getElementById('satSlider').value = 160;
+                document.getElementById('conSlider').value = 130;
+            } else if (presetName === 'flat-log') {
+                targetLabel.innerText = "Raw LOG Flat";
+                overlay.style.opacity = '0';
+                document.getElementById('expSlider').value = 25;
+                document.getElementById('satSlider').value = 40;
+                document.getElementById('conSlider').value = 65;
+            }
+
+            updateFineGrading();
+            showNotification("LUT Applied", `Custom color signature changed to ${targetLabel.innerText}.`, true);
+        }
+
+        function applyCombinedFilters() {
+            const targetImg = document.getElementById('gradeImage');
+            const brightnessValue = 100 + (currentGradingState.exposure);
+            const saturationValue = currentGradingState.saturation;
+            const contrastValue = currentGradingState.contrast;
+
+            targetImg.style.filter = `brightness(${brightnessValue}%) saturate(${saturationValue}%) contrast(${contrastValue}%)`;
+        }
+
+        function resetGradingControls() {
+            document.getElementById('expSlider').value = 0;
+            document.getElementById('satSlider').value = 100;
+            document.getElementById('conSlider').value = 100;
+            
+            const overlay = document.getElementById('filterOverlay');
+            overlay.style.opacity = '0';
+            document.getElementById('presetLabel').innerText = "Standard Rec.709";
+            
+            updateFineGrading();
+            showNotification("Grades Reset", "All timeline channels restored to standardized Rec.709 profile.", false);
+        }
+
+
+        // PLAN CALCULATOR SYSTEM
+        function calculatePlanPrice() {
+            let total = 0;
+            let items = [];
+
+            const isAlbum = document.getElementById('optAlbum').checked;
+            const isThumb = document.getElementById('optThumbnail').checked;
+            const isTeaser = document.getElementById('optTeaser').checked;
+
+            if (isAlbum) { basePrice = 1499; total += basePrice; items.push("Base Album Edit"); }
+            if (isThumb) { total += 250; items.push("Custom Thumbnail"); }
+            if (isTeaser) { total += 250; items.push("Teaser Clip"); }
+
+            document.getElementById('dynamicCalcPrice').innerText = "₹" + total;
+            document.getElementById('summaryAddonsText').innerText = items.join(', ') || "None Selected";
+        }
+
+        function bookCustomPlan() {
+            const price = document.getElementById('dynamicCalcPrice').innerText;
+            const description = document.getElementById('summaryAddonsText').innerText;
+
+            selectPackage(`Custom Built Suite (${price}) - [${description}]`);
+            showNotification("Custom Plan Bound", "Details loaded smoothly into enquiry details field below.", true);
+            document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function selectPackage(name) {
+            const el = document.getElementById('selectedPackage');
+            if (el) {
+                el.value = name;
+            }
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById('senderName').value;
+            const phone = document.getElementById('senderPhone').value;
+            const selectedVal = document.getElementById('selectedPackage').value;
+
+            if (name && phone) {
+                showNotification("Enquiry Lodged", `Hi ${name}, our editing timeline team will contact you shortly about: ${selectedVal}!`, true);
+                document.getElementById('enquiryForm').reset();
+            }
+        }
+
+        // Initialize state on render completion
+        window.onload = function() {
+            init3DLaptopScene();
+            calculatePlanPrice();
+            checkAssistantStatusOnLoad();
+        };
+    </script>
+</body>
+</html>
+
+```
